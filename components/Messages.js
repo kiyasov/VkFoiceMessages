@@ -6,11 +6,12 @@ const { Option } = Select;
 import axios from "axios";
 import _ from "lodash";
 
-import { useMount } from "react-use";
+import { useMount, useToggle } from "react-use";
 
 import "../scss/pages/messages.scss";
 
 function Messages() {
+  const [isLoad, toogle] = useToggle(false);
   const [fileList, setFileList] = useState([]);
   const [chatId, setChatId] = useState(null);
   const [conversationsList, setConversations] = useState([]);
@@ -62,18 +63,51 @@ function Messages() {
     fileList
   };
 
+  const convertAudio = async () => {
+    const formData = new FormData();
+
+    fileList.forEach(file => {
+      formData.append("file", file);
+    });
+
+    formData.append("filelocation", "chatId");
+    formData.append("target", "MP3");
+    formData.append("bitrate", "16k");
+    formData.append("frequency", 16000);
+    formData.append("channel", 1);
+    formData.append("type_converter", "audio");
+
+    const {
+      data: { id, filename }
+    } = await axios.post("https://s1.fconvert.ru/fconvert.php", formData);
+
+    const { data } = await axios({
+      url: `https://s1.fconvert.ru/upload/${id}/`,
+      method: "POST",
+      responseType: "blob"
+    });
+
+    let blob = new Blob([data]);
+
+    return new File([blob], filename);
+  };
+
   const handleUpload = async () => {
+    if (isLoad) return false;
+
+    toogle(true);
+
     const formData = new FormData();
 
     formData.append("peer_id", chatId);
+    formData.append("files[]", await convertAudio());
     formData.append("methodName", "messages.send");
-
-    fileList.forEach(file => {
-      formData.append("files[]", file);
-    });
 
     try {
       await axios.post("/api/v1/method", formData);
+
+      toogle(false);
+      setFileList([]);
 
       notification.success({
         message: "Успешно!",
@@ -121,6 +155,7 @@ function Messages() {
         </Button>
       </Upload>
       <Button
+        loading={isLoad}
         type="primary"
         onClick={handleUpload}
         disabled={fileList.length === 0}
