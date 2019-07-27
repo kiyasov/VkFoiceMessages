@@ -1,0 +1,11 @@
+node_modules/
+.idea/
+.ftpconfig
+public/appDev.js
+public/adminDev.js
+logs/
+.DS_Store
+deployment-config.json
+docker/data/
+build/
+.next/
