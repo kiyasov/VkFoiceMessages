@@ -61,11 +61,16 @@ export default function Index() {
     } catch (error) {
       if (error.response) {
         const { data } = error.response;
+
         let message = data.data;
 
-        if (_.get(data, "props")["validation_type"] === "2fa_app") {
+        if (_.get(data, "props")["error_code"] === "need_validation") {
           toggleCode(true);
-          message = "Введите код из приложения";
+          message = `Введите код из ${
+            _.get(data, "props")["validation_type"] === "2fa_app"
+              ? "приложения"
+              : "смс"
+          }`;
         }
 
         notification.error({
