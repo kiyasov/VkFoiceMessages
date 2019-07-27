@@ -28,11 +28,22 @@ export default function Head() {
             <a>Профиль</a>
           </Link>
         </Menu.Item>
+
         {_.get(profile, "user_id") && (
           <Menu.Item key="3" onClick={logout}>
             Выйти
           </Menu.Item>
         )}
+
+        <Menu.Item key="2">
+          <a
+            href="https://github.com/kiyasov/VkVoiceMessages"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Исходный код
+          </a>
+        </Menu.Item>
       </Menu>
     </Header>
   );
