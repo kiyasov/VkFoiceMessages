@@ -4,13 +4,14 @@ const express = require("express");
 const app = express.Router();
 
 app.post("/api/v1/authProfile", async (req, res) => {
-  const { body } = req;
+  const { body = {} } = req;
 
   try {
     let user = await easyvk({
       username: req.universalCookies.get("username"),
       password: req.universalCookies.get("password"),
-      [body.code ? "code" : "2fa_supported"]: body.code || 1
+      [body.code ? "code" : "2fa_supported"]: body.code || 1,
+      ...body
     });
 
     req.universalCookies.set("access_token", user.session.access_token);

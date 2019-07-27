@@ -34,7 +34,8 @@ export default function Index() {
   const [dataList, setData] = useState({
     username: _.get(cookies, "username"),
     password: _.get(cookies, "password"),
-    code: null
+    code: null,
+    isSms: false
   });
 
   const changeValue = ({ target }) => {
@@ -50,12 +51,20 @@ export default function Index() {
   };
 
   const authProfile = async () => {
-    let { code } = dataList;
+    let { isSms, code } = dataList;
+
+    let props = {
+      code
+    };
+
+    if (isSms) {
+      props.push({
+        force_sms: 1
+      });
+    }
 
     try {
-      const { data } = await axios.post("/api/v1/authProfile", {
-        code
-      });
+      const { data } = await axios.post("/api/v1/authProfile", props);
 
       setProfile(data);
     } catch (error) {
@@ -66,6 +75,14 @@ export default function Index() {
 
         if (_.get(data, "props")["error_code"] === "need_validation") {
           toggleCode(true);
+
+          if (_.get(data, "props")["validation_type"] !== "2fa_app") {
+            setData({
+              ...dataList,
+              isSms: true
+            });
+          }
+
           message = `Введите код из ${
             _.get(data, "props")["validation_type"] === "2fa_app"
               ? "приложения"
