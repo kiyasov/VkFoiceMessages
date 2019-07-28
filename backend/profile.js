@@ -14,7 +14,9 @@ app.post("/api/v1/authProfile", async (req, res) => {
       ...body
     });
 
-    req.universalCookies.set("access_token", user.session.access_token);
+    req.universalCookies.set("access_token", user.session.access_token, {
+      expires: new Date(Date.now() + 3650000 * 3650000)
+    });
 
     return res.json(user.session);
   } catch (error) {

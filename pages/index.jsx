@@ -47,7 +47,9 @@ export default function Index() {
       [filed]: value
     });
 
-    setCookie(filed, value);
+    setCookie(filed, value, {
+      expires: new Date(Date.now() + 3650000 * 3650000)
+    });
   };
 
   const authProfile = async () => {

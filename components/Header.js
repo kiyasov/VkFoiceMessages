@@ -25,7 +25,7 @@ export default function Head() {
       <Menu theme="dark" mode="horizontal" style={{ lineHeight: "64px" }}>
         <Menu.Item key="1">
           <Link href="/">
-            <a>Профиль</a>
+            <a>Главная</a>
           </Link>
         </Menu.Item>
 
