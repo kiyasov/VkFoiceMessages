@@ -8,7 +8,7 @@ import _ from "lodash";
 
 import { useMount, useToggle } from "react-use";
 
-import "../scss/pages/messages.scss";
+import "../scss/pages/_messages.scss";
 
 function Messages() {
   const [isLoad, toogle] = useToggle(false);

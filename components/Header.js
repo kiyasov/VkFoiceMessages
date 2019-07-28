@@ -1,6 +1,6 @@
 import React from "react";
 import Link from "next/link";
-import { Menu, Layout } from "antd";
+import { Menu, Layout, Icon } from "antd";
 
 const { Header } = Layout;
 
@@ -8,6 +8,8 @@ import useProfile from "../hooks/useProfile";
 import { useCookies } from "react-cookie";
 
 import _ from "lodash";
+
+import "../scss/components/_header.scss";
 
 export default function Head() {
   const [profile, setProfile] = useProfile();
@@ -21,19 +23,33 @@ export default function Head() {
 
   return (
     <Header style={{ width: "100%" }}>
-      <div className="logo"></div>
+      <div className="logo">
+        <img src="/static/logo.png" />
+      </div>
       <Menu theme="dark" mode="horizontal" style={{ lineHeight: "64px" }}>
         <Menu.Item key="1">
           <Link href="/">
-            <a>Главная</a>
+            <a>
+              <Icon type="home" />
+              Главная
+            </a>
           </Link>
         </Menu.Item>
 
-        {_.get(profile, "user_id") && (
-          <Menu.Item key="3" onClick={logout}>
+        {_.get(profile, "user_id") && [
+          <Menu.Item key="3" disabled={true}>
+            <Link href="/">
+              <a>
+                <Icon type="message" />
+                Диалоги
+              </a>
+            </Link>
+          </Menu.Item>,
+          <Menu.Item key="4" onClick={logout}>
+            <Icon type="logout" />
             Выйти
           </Menu.Item>
-        )}
+        ]}
 
         <Menu.Item key="2">
           <a
@@ -41,6 +57,7 @@ export default function Head() {
             target="_blank"
             rel="noopener noreferrer"
           >
+            <Icon type="github" />
             Исходный код
           </a>
         </Menu.Item>
