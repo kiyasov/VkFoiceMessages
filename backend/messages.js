@@ -17,16 +17,17 @@ async function formatData({ vk, req }) {
   let conversation = _.map(
     itemsList,
     ({ conversation: { peer, chat_settings = {} } }) => {
-      let id = peer.type === "group" ? peer.local_id : peer.id;
+      let idType = peer.type === "group" ? peer.local_id : peer.id;
 
       if (peer.type === "user") {
-        userList.push(id);
+        userList.push(idType);
       } else if (peer.type === "group") {
-        groupList.push(id);
+        groupList.push(idType);
       }
 
       return {
-        id,
+        idType,
+        id: peer.id,
         title: peer.type === "chat" ? chat_settings.title : "",
         type: peer.type
       };
@@ -47,13 +48,13 @@ async function formatData({ vk, req }) {
     let title;
 
     if (item.type === "user") {
-      let user = _.find(vkr, ["id", item.id]);
+      let user = _.find(vkr, ["id", item.idType]);
 
       let { first_name, last_name } = user;
 
       title = `${first_name} ${last_name}`;
     } else if (item.type === "group") {
-      let group = _.find(vkrGroup, ["id", item.id]);
+      let group = _.find(vkrGroup, ["id", item.idType]);
 
       title = group.name;
     }
