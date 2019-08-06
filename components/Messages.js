@@ -72,7 +72,7 @@ function Messages() {
 
     formData.append("filelocation", "chatId");
     formData.append("target", "MP3");
-    formData.append("bitrate", "16k");
+    formData.append("bitrate", "320k");
     formData.append("frequency", 16000);
     formData.append("channel", 1);
     formData.append("type_converter", "audio");
