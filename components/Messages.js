@@ -1,5 +1,13 @@
 import React, { useState } from "react";
-import { Upload, Icon, Button, Row, Select, notification } from "antd";
+import {
+  Upload,
+  Icon,
+  Button,
+  Row,
+  Select,
+  notification,
+  Checkbox
+} from "antd";
 
 const { Option } = Select;
 
@@ -12,6 +20,7 @@ import "../scss/pages/_messages.scss";
 
 function Messages() {
   const [isLoad, toogle] = useToggle(false);
+  const [checked, toogleChecked] = useToggle(true);
   const [fileList, setFileList] = useState([]);
   const [chatId, setChatId] = useState(null);
   const [conversationsList, setConversations] = useState([]);
@@ -64,6 +73,8 @@ function Messages() {
   };
 
   const convertAudio = async () => {
+    if (!checked) return fileList[0];
+
     const formData = new FormData();
 
     fileList.forEach(file => {
@@ -73,7 +84,7 @@ function Messages() {
     formData.append("filelocation", "chatId");
     formData.append("target", "MP3");
     formData.append("bitrate", "320k");
-    formData.append("frequency", 16000);
+    //  formData.append("frequency", 16000);
     formData.append("channel", 1);
     formData.append("type_converter", "audio");
 
@@ -149,11 +160,16 @@ function Messages() {
           </Option>
         ))}
       </Select>
+
       <Upload {...props}>
         <Button>
           <Icon type="upload" /> Выберите аудиозапись
         </Button>
       </Upload>
+
+      <Checkbox checked={checked} onChange={toogleChecked}>
+        Конвертировать автоматически
+      </Checkbox>
       <Button
         loading={isLoad}
         type="primary"
