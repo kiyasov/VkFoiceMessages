@@ -72,26 +72,34 @@ async function sendMessage({ req, vk }) {
     files: { files = {} }
   } = req;
 
-  const { url } = await vk.uploader.getUploadURL(
-    "docs.getMessagesUploadServer",
-    {
-      type: "audio_message"
-    }
-  );
+  if (_.size(files) > 0) {
+    const { url } = await vk.uploader.getUploadURL(
+      "docs.getMessagesUploadServer",
+      {
+        type: "audio_message"
+      }
+    );
 
-  let { vkr: fileData } = await vk.uploader.uploadFile(
-    url,
-    files[0].path,
-    "file"
-  );
+    let { vkr: fileData } = await vk.uploader.uploadFile(
+      url,
+      files[0].path,
+      "file"
+    );
 
-  fileData = await vk.call("docs.save", fileData);
-  fileData = fileData.vkr[0];
+    fileData = await vk.call("docs.save", fileData);
+    fileData = fileData.vkr[0];
 
-  await vk.call(body.methodName, {
-    peer_id: body.peer_id,
-    attachment: [`doc${fileData.owner_id}_${fileData.id}`]
-  });
+    await vk.call(body.methodName, {
+      peer_id: body.peer_id,
+      attachment: [`doc${fileData.owner_id}_${fileData.id}`],
+      message: body.message
+    });
+  } else {
+    await vk.call(body.methodName, {
+      peer_id: body.peer_id,
+      message: body.message
+    });
+  }
 
   return {
     status: "success"

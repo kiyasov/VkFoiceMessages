@@ -5,11 +5,13 @@ import {
   Button,
   Row,
   Select,
+  Input,
   notification,
   Checkbox
 } from "antd";
 
 const { Option } = Select;
+const { TextArea } = Input;
 
 import axios from "axios";
 import _ from "lodash";
@@ -23,9 +25,12 @@ function Messages() {
   const [checked, toogleChecked] = useToggle(true);
   const [fileList, setFileList] = useState([]);
   const [chatId, setChatId] = useState(null);
+  const [message, setMessage] = useState(null);
   const [conversationsList, setConversations] = useState([]);
 
   useMount(async () => await getConversations());
+
+  console.log(message);
 
   const getConversations = async () => {
     try {
@@ -111,7 +116,12 @@ function Messages() {
     const formData = new FormData();
 
     formData.append("peer_id", chatId);
-    formData.append("files[]", await convertAudio());
+    formData.append("message", message);
+
+    if (fileList.length !== 0) {
+      formData.append("files[]", await convertAudio());
+    }
+
     formData.append("methodName", "messages.send");
 
     try {
@@ -119,6 +129,7 @@ function Messages() {
 
       toogle(false);
       setFileList([]);
+      setMessage(null);
 
       notification.success({
         message: "Успешно!",
@@ -170,11 +181,25 @@ function Messages() {
       <Checkbox checked={checked} onChange={toogleChecked}>
         Конвертировать автоматически
       </Checkbox>
+
+      <TextArea
+        style={{
+          width: 400,
+          padding: 5,
+          display: "block",
+          margin: "10px auto"
+        }}
+        rows={4}
+        defaultValue={message}
+        onChange={({ currentTarget: { value } }) => setMessage(value)}
+        placeholder="Введите сообщение (не обязательно)"
+      />
+
       <Button
         loading={isLoad}
         type="primary"
         onClick={handleUpload}
-        disabled={fileList.length === 0}
+        disabled={!(fileList.length !== 0 || message)}
         style={{ marginTop: 16 }}
       >
         Отправить сообщение
