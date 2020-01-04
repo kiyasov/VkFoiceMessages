@@ -72,6 +72,14 @@ async function sendMessage({ req, vk }) {
     files: { files = {} }
   } = req;
 
+  let props = {};
+
+  if (body.message) {
+    props = {
+      message: body.message
+    };
+  }
+
   if (_.size(files) > 0) {
     const { url } = await vk.uploader.getUploadURL(
       "docs.getMessagesUploadServer",
@@ -92,12 +100,12 @@ async function sendMessage({ req, vk }) {
     await vk.call(body.methodName, {
       peer_id: body.peer_id,
       attachment: [`doc${fileData.owner_id}_${fileData.id}`],
-      message: body.message
+      ...props
     });
   } else {
     await vk.call(body.methodName, {
       peer_id: body.peer_id,
-      message: body.message
+      ...props
     });
   }
 
