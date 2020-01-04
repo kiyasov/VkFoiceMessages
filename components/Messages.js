@@ -116,7 +116,10 @@ function Messages() {
     const formData = new FormData();
 
     formData.append("peer_id", chatId);
-    formData.append("message", message);
+
+    if (message) {
+      formData.append("message", message);
+    }
 
     if (fileList.length !== 0) {
       formData.append("files[]", await convertAudio());
