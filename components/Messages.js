@@ -240,7 +240,7 @@ class Messages extends PureComponent {
             margin: "10px auto"
           }}
           rows={4}
-          defaultValue={message}
+          value={message}
           onChange={this.setMessage}
           placeholder="Введите сообщение (не обязательно)"
         />
