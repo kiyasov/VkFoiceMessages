@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { PureComponent } from "react";
 import {
   Upload,
   Icon,
@@ -20,28 +20,35 @@ import { useMount, useToggle } from "react-use";
 
 import "../scss/pages/_messages.scss";
 
-function Messages() {
-  const [isLoad, toogle] = useToggle(false);
-  const [checked, toogleChecked] = useToggle(true);
-  const [fileList, setFileList] = useState([]);
-  const [chatId, setChatId] = useState(null);
-  const [message, setMessage] = useState(null);
-  const [conversationsList, setConversations] = useState([]);
+class Messages extends PureComponent {
+  constructor(props) {
+    super(props);
 
-  useMount(async () => await getConversations());
+    this.getConversations();
 
-  console.log(message);
+    this.state = {
+      isLoad: false,
+      checked: true,
+      fileList: [],
+      chatId: null,
+      message: null,
+      conversationsList: []
+    };
+  }
 
-  const getConversations = async () => {
+  getConversations = async () => {
     try {
       let { data } = await axios.post("/api/v1/method", {
         methodName: "messages.getConversations",
         props: {
-          count: 50
+          count: 50,
+          extended: 1
         }
       });
 
-      setConversations(data);
+      this.setState({
+        conversationsList: data
+      });
     } catch (error) {
       if (error.response) {
         const {
@@ -59,25 +66,31 @@ function Messages() {
     }
   };
 
-  const props = {
-    onRemove: file => {
-      setFileList(fileList => {
-        const index = fileList.indexOf(file);
-        const newFileList = fileList.slice();
-        newFileList.splice(index, 1);
+  onRemove = file => {
+    const { fileList } = this.state;
 
-        return newFileList;
-      });
-    },
-    beforeUpload: file => {
-      setFileList(fileList => [...fileList, file]);
+    const index = fileList.indexOf(file);
+    const newFileList = fileList.slice();
+    newFileList.splice(index, 1);
 
-      return false;
-    },
-    fileList
+    this.setState({
+      fileList: newFileList
+    });
   };
 
-  const convertAudio = async () => {
+  beforeUpload = file => {
+    const { fileList } = this.state;
+
+    this.setState({
+      fileList: [...fileList, file]
+    });
+
+    return false;
+  };
+
+  convertAudio = async () => {
+    const { checked, fileList } = this.state;
+
     if (!checked) return fileList[0];
 
     const formData = new FormData();
@@ -108,10 +121,14 @@ function Messages() {
     return new File([blob], filename);
   };
 
-  const handleUpload = async () => {
+  handleUpload = async () => {
+    const { isLoad, message, chatId, fileList } = this.state;
+
     if (isLoad) return false;
 
-    toogle(true);
+    this.setState({
+      isLoad: true
+    });
 
     const formData = new FormData();
 
@@ -122,7 +139,7 @@ function Messages() {
     }
 
     if (fileList.length !== 0) {
-      formData.append("files[]", await convertAudio());
+      formData.append("files[]", await this.convertAudio());
     }
 
     formData.append("methodName", "messages.send");
@@ -130,9 +147,11 @@ function Messages() {
     try {
       await axios.post("/api/v1/method", formData);
 
-      toogle(false);
-      setFileList([]);
-      setMessage(null);
+      this.setState({
+        isLoad: false,
+        fileList: [],
+        message: null
+      });
 
       notification.success({
         message: "Успешно!",
@@ -156,59 +175,88 @@ function Messages() {
     }
   };
 
-  return (
-    <Row className="messages-row">
-      <Select
-        showSearch
-        style={{ width: 200, marginRight: 5 }}
-        placeholder="Выберите диалог"
-        optionFilterProp="children"
-        onChange={value => setChatId(value)}
-        filterOption={(input, option) =>
-          option.props.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
-        }
-      >
-        {_.map(conversationsList, ({ id, title }) => (
-          <Option key={id} value={id}>
-            {title}
-          </Option>
-        ))}
-      </Select>
+  setMessage = ({ currentTarget: { value } }) => {
+    this.setState({ message: value });
+  };
 
-      <Upload {...props}>
-        <Button>
-          <Icon type="upload" /> Выберите аудиозапись
+  toogleChecked = () => {
+    const { checked } = this.state;
+
+    this.setState({ checked: !checked });
+  };
+
+  changeState = value => {
+    this.setState({ chatId: value });
+  };
+
+  render() {
+    const {
+      fileList,
+      checked,
+      conversationsList,
+      message,
+      isLoad
+    } = this.state;
+
+    return (
+      <Row className="messages-row">
+        <Select
+          showSearch
+          style={{ width: 200, marginRight: 5 }}
+          placeholder="Выберите диалог"
+          optionFilterProp="children"
+          onChange={this.changeState}
+          filterOption={(input, option) =>
+            option.props.children.toLowerCase().indexOf(input.toLowerCase()) >=
+            0
+          }
+        >
+          {_.map(conversationsList, ({ id, title }) => (
+            <Option key={id} value={id}>
+              {title}
+            </Option>
+          ))}
+        </Select>
+
+        <Upload
+          onRemove={this.onRemove}
+          data={fileList}
+          beforeUpload={this.beforeUpload}
+        >
+          <Button>
+            <Icon type="upload" /> Выберите аудиозапись
+          </Button>
+        </Upload>
+
+        <Checkbox checked={checked} onChange={this.toogleChecked}>
+          Конвертировать автоматически
+        </Checkbox>
+
+        <TextArea
+          style={{
+            width: 400,
+            padding: 5,
+            display: "block",
+            margin: "10px auto"
+          }}
+          rows={4}
+          defaultValue={message}
+          onChange={this.setMessage}
+          placeholder="Введите сообщение (не обязательно)"
+        />
+
+        <Button
+          loading={isLoad}
+          type="primary"
+          onClick={this.handleUpload}
+          disabled={!(fileList.length !== 0 || message)}
+          style={{ marginTop: 16 }}
+        >
+          Отправить сообщение
         </Button>
-      </Upload>
-
-      <Checkbox checked={checked} onChange={toogleChecked}>
-        Конвертировать автоматически
-      </Checkbox>
-
-      <TextArea
-        style={{
-          width: 400,
-          padding: 5,
-          display: "block",
-          margin: "10px auto"
-        }}
-        rows={4}
-        defaultValue={message}
-        onChange={({ currentTarget: { value } }) => setMessage(value)}
-        placeholder="Введите сообщение (не обязательно)"
-      />
-
-      <Button
-        loading={isLoad}
-        type="primary"
-        onClick={handleUpload}
-        disabled={!(fileList.length !== 0 || message)}
-        style={{ marginTop: 16 }}
-      >
-        Отправить сообщение
-      </Button>
-    </Row>
-  );
+      </Row>
+    );
+  }
 }
 
 export default Messages;

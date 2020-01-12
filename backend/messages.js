@@ -1,67 +1,60 @@
 const _ = require("lodash");
 
+function getUser(fromId, { extendsList, chat_settings }) {
+  if (!chat_settings) {
+    let that = _.find(extendsList, ["id", +/\d+/.exec(fromId)]);
+
+    let userName = _.has(that, "first_name")
+      ? `${that.first_name} ${that.last_name}`
+      : _.get(that, "name");
+    let userNameAcc = _.has(that, "first_name_acc")
+      ? `${that.first_name_acc} ${that.last_name_acc}`
+      : userName;
+    let avatar = _.get(that, "photo_100");
+    let sex = _.result(that, "sex", 0) === 1 ? "female" : "male";
+
+    return _.assign(
+      _.omit(that, [
+        "photo_100",
+        "first_name_acc",
+        "last_name_acc",
+        "first_name",
+        "last_name",
+        "sex"
+      ]),
+      {
+        id: fromId,
+        userName,
+        avatar,
+        userNameAcc,
+        sex
+      }
+    );
+  }
+
+  let avatar = _.result(chat_settings, "photo.photo_100", "");
+  let userName = _.result(chat_settings, "title", "");
+
+  return { id: fromId, userName, avatar };
+}
+
 async function formatData({ vk, req }) {
   const { body } = req;
 
   let {
-    vkr: { items }
+    vkr: { items, profiles, groups }
   } = await vk.call(body.methodName, body.props);
 
-  let userList = [];
-  let groupList = [];
-
-  const itemsList = _.filter(items, ({ conversation: { peer: { type } } }) =>
-    ["chat", "user", "group"].includes(type)
-  );
-
-  let conversation = _.map(
-    itemsList,
-    ({ conversation: { peer, chat_settings = {} } }) => {
-      let idType = peer.type === "group" ? peer.local_id : peer.id;
-
-      if (peer.type === "user") {
-        userList.push(idType);
-      } else if (peer.type === "group") {
-        groupList.push(idType);
-      }
-
-      return {
-        idType,
-        id: peer.id,
-        title: peer.type === "chat" ? chat_settings.title : "",
-        type: peer.type
-      };
-    }
-  );
-
-  let { vkr } = await vk.call("users.get", {
-    user_ids: _.join(userList, ",")
-  });
-
-  let { vkr: vkrGroup } = await vk.call("groups.getById", {
-    group_ids: _.join(groupList, ",")
-  });
-
-  return _.map(conversation, item => {
-    if (_.size(item.title) > 0) return item;
-
-    let title;
-
-    if (item.type === "user") {
-      let user = _.find(vkr, ["id", item.idType]);
-
-      let { first_name, last_name } = user;
-
-      title = `${first_name} ${last_name}`;
-    } else if (item.type === "group") {
-      let group = _.find(vkrGroup, ["id", item.idType]);
-
-      title = group.name;
-    }
+  return _.map(items, ({ conversation: { peer, chat_settings } }) => {
+    let { userName } = getUser(peer.id, {
+      chat_settings,
+      extendsList: _.concat(profiles, groups)
+    });
 
     return {
-      ...item,
-      title
+      id: peer.id,
+      title: userName,
+      type: peer.type
     };
   });
 }
