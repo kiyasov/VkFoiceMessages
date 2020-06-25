@@ -22,7 +22,7 @@ app.post("/api/v1/method", upload, async (req, res) => {
       case "messages.send":
         return res.json(await sendMessage({ vk, req }));
       default: {
-        let { vkr } = await vk.call(body.methodName, body.props);
+        let vkr = await vk.call(body.methodName, body.props);
         return res.json(vkr);
       }
     }

@@ -1,7 +1,6 @@
 import React, { PureComponent } from "react";
 import {
   Upload,
-  Icon,
   Button,
   Row,
   Select,
@@ -10,13 +9,17 @@ import {
   Checkbox
 } from "antd";
 
-const { Option } = Select;
+import {
+  WarningOutlined,
+  CheckCircleOutlined,
+  UploadOutlined
+} from "@ant-design/icons";
+
+const { Option, OptGroup } = Select;
 const { TextArea } = Input;
 
 import axios from "axios";
 import _ from "lodash";
-
-import { useMount, useToggle } from "react-use";
 
 import "../scss/pages/_messages.scss";
 
@@ -58,7 +61,7 @@ class Messages extends PureComponent {
         notification.error({
           message: "Ошибка!",
           description: data,
-          icon: <Icon type="stop" />
+          icon: <WarningOutlined />
         });
       } else {
         console.error(error);
@@ -147,16 +150,10 @@ class Messages extends PureComponent {
     try {
       await axios.post("/api/v1/method", formData);
 
-      this.setState({
-        isLoad: false,
-        fileList: [],
-        message: null
-      });
-
       notification.success({
         message: "Успешно!",
         description: "Сообщение отправлено",
-        icon: <Icon type="check-circle" />
+        icon: <CheckCircleOutlined />
       });
     } catch (error) {
       if (error.response) {
@@ -167,12 +164,18 @@ class Messages extends PureComponent {
         notification.error({
           message: "Ошибка!",
           description: data,
-          icon: <Icon type="stop" />
+          icon: <WarningOutlined />
         });
       } else {
         console.error(error);
       }
     }
+
+    this.setState({
+      isLoad: false,
+      fileList: [],
+      message: null
+    });
   };
 
   setMessage = ({ currentTarget: { value } }) => {
@@ -198,8 +201,11 @@ class Messages extends PureComponent {
       isLoad
     } = this.state;
 
+    const { children } = this.props;
+
     return (
-      <Row className="messages-row">
+      <div style={{ textAlign: "center", margin: "o auto" }}>
+        {children}
         <Select
           showSearch
           style={{ width: 200, marginRight: 5 }}
@@ -207,43 +213,56 @@ class Messages extends PureComponent {
           optionFilterProp="children"
           onChange={this.changeState}
           filterOption={(input, option) =>
-            option.props.children.toLowerCase().indexOf(input.toLowerCase()) >=
-            0
+            _.toLower(option.children).includes(_.toLower(input))
           }
         >
-          {_.map(conversationsList, ({ id, title }) => (
-            <Option key={id} value={id}>
-              {title}
-            </Option>
-          ))}
+          <OptGroup label="Пользователя">
+            {_.map(_.get(conversationsList, "user"), ({ id, title }) => (
+              <Option key={id} value={id}>
+                {title}
+              </Option>
+            ))}
+          </OptGroup>
+          <OptGroup label="Группы">
+            {_.map(_.get(conversationsList, "group"), ({ id, title }) => (
+              <Option key={id} value={id}>
+                {title}
+              </Option>
+            ))}
+          </OptGroup>
         </Select>
-
+        <br />
         <Upload
           onRemove={this.onRemove}
           data={fileList}
           beforeUpload={this.beforeUpload}
         >
-          <Button>
-            <Icon type="upload" /> Выберите аудиозапись
+          <Button style={{ width: 200, marginTop: 16 }}>
+            <UploadOutlined /> Выберите аудиозапись
           </Button>
         </Upload>
-
+        <br />
         <Checkbox checked={checked} onChange={this.toogleChecked}>
           Конвертировать автоматически
         </Checkbox>
-
-        <TextArea
+        <br />
+        <div
           style={{
-            width: 400,
             padding: 5,
-            display: "block",
-            margin: "10px auto"
+            margin: 20
           }}
-          rows={4}
-          value={message}
-          onChange={this.setMessage}
-          placeholder="Введите сообщение (не обязательно)"
-        />
+        >
+          <TextArea
+            style={{
+              padding: 5,
+              display: "block"
+            }}
+            rows={4}
+            value={message}
+            onChange={this.setMessage}
+            placeholder="Введите сообщение (не обязательно)"
+          />
+        </div>
 
         <Button
           loading={isLoad}
@@ -254,7 +273,7 @@ class Messages extends PureComponent {
         >
           Отправить сообщение
         </Button>
-      </Row>
+      </div>
     );
   }
 }

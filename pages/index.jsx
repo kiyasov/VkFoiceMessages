@@ -7,12 +7,20 @@ import useProfile from "../hooks/useProfile";
 import {
   Input,
   Tooltip,
-  Icon,
   Row,
   Button,
   notification,
-  Descriptions
+  Descriptions,
+  Col
 } from "antd";
+
+import {
+  WarningOutlined,
+  UserOutlined,
+  SafetyCertificateOutlined,
+  InfoCircleOutlined,
+  LoadingOutlined
+} from "@ant-design/icons";
 
 import Message from "../components/Messages";
 
@@ -27,7 +35,7 @@ export default function Index() {
     "access_token"
   ]);
 
-  const [profile, setProfile] = useProfile();
+  const [profile, setProfile] = useProfile(null);
 
   const [isCode, toggleCode] = useToggle(false);
 
@@ -95,7 +103,7 @@ export default function Index() {
         notification.error({
           message: "Ошибка!",
           description: message,
-          icon: <Icon type="stop" />
+          icon: <WarningOutlined />
         });
       } else {
         console.error(error);
@@ -106,17 +114,16 @@ export default function Index() {
   if (!profile) {
     return (
       <Row style={{ textAlign: "center", margin: "o auto" }}>
-        <Icon type="loading" style={{ fontSize: "100pt" }} />
+        <LoadingOutlined style={{ fontSize: "100pt" }} />
       </Row>
     );
   } else if (_.get(profile, "user_id")) {
     return (
-      <Row style={{ padding: 10, margin: "o auto", textAlign: "center" }}>
+      <Message>
         <Descriptions
           title={`${profile.first_name} ${profile.last_name}`}
         ></Descriptions>
-        <Message />
-      </Row>
+      </Message>
     );
   }
 
@@ -128,10 +135,10 @@ export default function Index() {
         defaultValue={dataList.username}
         onBlur={changeValue}
         data-filed="username"
-        prefix={<Icon type="user" />}
+        prefix={<UserOutlined />}
         suffix={
           <Tooltip title="Телефон или email">
-            <Icon type="info-circle" />
+            <InfoCircleOutlined />
           </Tooltip>
         }
       />
@@ -141,7 +148,7 @@ export default function Index() {
         onBlur={changeValue}
         data-filed="password"
         defaultValue={dataList.password}
-        prefix={<Icon type="safety-certificate" />}
+        prefix={<SafetyCertificateOutlined />}
       />
       {isCode && (
         <Input
@@ -152,10 +159,10 @@ export default function Index() {
           defaultValue={dataList.code}
           suffix={
             <Tooltip title="При наличии двухфакторной авторизации">
-              <Icon type="info-circle" />
+              <InfoCircleOutlined />
             </Tooltip>
           }
-          prefix={<Icon type="safety-certificate" />}
+          prefix={<SafetyCertificateOutlined />}
         />
       )}
       <Button

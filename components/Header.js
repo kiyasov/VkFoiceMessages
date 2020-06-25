@@ -1,6 +1,13 @@
 import React from "react";
 import Link from "next/link";
-import { Menu, Layout, Icon } from "antd";
+import { Menu, Layout } from "antd";
+
+import {
+  HomeOutlined,
+  LogoutOutlined,
+  MessageOutlined,
+  GithubOutlined
+} from "@ant-design/icons";
 
 const { Header } = Layout;
 
@@ -24,29 +31,29 @@ export default function Head() {
   return (
     <Header style={{ width: "100%" }}>
       <div className="logo">
-        <img src="/static/logo.png" />
+        <img src="/logo.png" />
       </div>
       <Menu theme="dark" mode="horizontal" style={{ lineHeight: "64px" }}>
         <Menu.Item key="1">
           <Link href="/">
             <a>
-              <Icon type="home" />
+              <HomeOutlined />
               Главная
             </a>
           </Link>
         </Menu.Item>
 
         {_.get(profile, "user_id") && [
-          <Menu.Item key="3" disabled={true}>
-            <Link href="/">
+          <Menu.Item key="3">
+            <Link href="/groups">
               <a>
-                <Icon type="message" />
-                Диалоги
+                <MessageOutlined />
+                Группы
               </a>
             </Link>
           </Menu.Item>,
           <Menu.Item key="4" onClick={logout}>
-            <Icon type="logout" />
+            <LogoutOutlined />
             Выйти
           </Menu.Item>
         ]}
@@ -57,7 +64,7 @@ export default function Head() {
             target="_blank"
             rel="noopener noreferrer"
           >
-            <Icon type="github" />
+            <GithubOutlined />
             Исходный код
           </a>
         </Menu.Item>

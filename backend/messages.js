@@ -1,4 +1,5 @@
 const _ = require("lodash");
+const easyvk = require("easyvk");
 
 function getUser(fromId, { extendsList, chat_settings }) {
   if (!chat_settings) {
@@ -39,24 +40,33 @@ function getUser(fromId, { extendsList, chat_settings }) {
 }
 
 async function formatData({ vk, req }) {
-  const { body } = req;
+  let { body } = req;
 
-  let {
-    vkr: { items, profiles, groups }
-  } = await vk.call(body.methodName, body.props);
+  let type = "user";
 
-  return _.map(items, ({ conversation: { peer, chat_settings } }) => {
-    let { userName } = getUser(peer.id, {
-      chat_settings,
-      extendsList: _.concat(profiles, groups)
+  if (_.toInteger(req.universalCookies.get("groupId")) > 0) {
+    body.props = _.merge(body.props, {
+      group_id: req.universalCookies.get("groupId")
     });
+    type = "group";
+  }
 
-    return {
-      id: peer.id,
-      title: userName,
-      type: peer.type
-    };
-  });
+  let { items, profiles, groups } = await vk.call(body.methodName, body.props);
+
+  return {
+    [type]: _.map(items, ({ conversation: { peer, chat_settings } }) => {
+      let { userName } = getUser(peer.id, {
+        chat_settings,
+        extendsList: _.concat(profiles, groups)
+      });
+
+      return {
+        id: peer.id,
+        title: userName,
+        type: peer.type
+      };
+    })
+  };
 }
 
 async function sendMessage({ req, vk }) {
@@ -65,30 +75,35 @@ async function sendMessage({ req, vk }) {
     files: { files = {} }
   } = req;
 
-  let props = {};
+  let props = {
+    random_id: easyvk.randomId()
+  };
 
   if (body.message) {
     props = {
+      ...props,
       message: body.message
     };
   }
 
+  /*
+
+  if (_.toInteger(req.universalCookies.get("groupId")) > 0) {
+    props = _.merge(props, {
+      group_id: req.universalCookies.get("groupId")
+    });
+  }*/
+
   if (_.size(files) > 0) {
-    const { url } = await vk.uploader.getUploadURL(
-      "docs.getMessagesUploadServer",
-      {
-        type: "audio_message"
-      }
-    );
+    const url = await vk.uploader.getUploadURL("docs.getMessagesUploadServer", {
+      type: "audio_message"
+    });
 
-    let { vkr: fileData } = await vk.uploader.uploadFile(
-      url,
-      files[0].path,
-      "file"
-    );
+    let fileData = await vk.uploader.uploadFile(url, files[0].path, "file");
 
-    fileData = await vk.call("docs.save", fileData);
-    fileData = fileData.vkr[0];
+    let { audio_message } = await vk.call("docs.save", fileData);
+
+    fileData = audio_message;
 
     await vk.call(body.methodName, {
       peer_id: body.peer_id,

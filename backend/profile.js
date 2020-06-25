@@ -10,6 +10,7 @@ app.post("/api/v1/authProfile", async (req, res) => {
     let user = await easyvk({
       username: req.universalCookies.get("username"),
       password: req.universalCookies.get("password"),
+      reauth: true,
       [body.code ? "code" : "2fa_supported"]: body.code || 1,
       ...body
     });

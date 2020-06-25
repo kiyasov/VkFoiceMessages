@@ -4,7 +4,9 @@ import { useMount } from "react-use";
 
 import axios from "axios";
 
-import { Icon, notification } from "antd";
+import { notification } from "antd";
+
+import { Icon } from "@ant-design/compatible";
 
 export default function Profile() {
   const [profile, setProfile] = useState(null);
@@ -25,6 +27,8 @@ export default function Profile() {
           description: data,
           icon: <Icon type="stop" />
         });
+
+        setProfile({});
       } else {
         console.error(error);
       }

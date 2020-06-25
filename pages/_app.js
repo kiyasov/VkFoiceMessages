@@ -1,5 +1,5 @@
 import React from "react";
-import App, { Container } from "next/app";
+import App from "next/app";
 
 import MainLayout from "../components/MainLayout";
 
@@ -23,13 +23,11 @@ export default class MyApp extends App {
     const { Component, pageProps, cookies } = this.props;
 
     return (
-      <Container>
-        <CookiesProvider cookies={typeof window !== "object" && cookies}>
-          <MainLayout>
-            <Component {...pageProps} />
-          </MainLayout>
-        </CookiesProvider>
-      </Container>
+      <CookiesProvider cookies={typeof window !== "object" && cookies}>
+        <MainLayout>
+          <Component {...pageProps} />
+        </MainLayout>
+      </CookiesProvider>
     );
   }
 }

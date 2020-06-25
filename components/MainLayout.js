@@ -10,12 +10,16 @@ import "antd/dist/antd.css";
 
 export default function MainLayout({ children }) {
   return (
-    <Layout>
+    <Layout
+      style={{
+        background: "#fff"
+      }}
+    >
       <Header />
       <Content
         style={{
           padding: "24px 0",
-          background: "#fff"
+          margin: "0 auto"
         }}
       >
         {children}
